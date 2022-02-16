@@ -1,0 +1,195 @@
+---
+title: "Säuglingsterblichkeit und Einkommen"
+author: "Ihr Name"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    collapsed: false
+    smooth_scroll: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mosaic)
+library(here)
+```
+
+# Einkommen und Säuglingssterblichkeit
+
+Säuglingssterblichkeit (im ersten Lebensjahr gestorbene Kinder) ist ein trauriges Thema - aber glücklicherweise in Deutschland mittlerweile selten. 
+
+Gleichzeitig ist Deutschland ein reiches Land. 
+
+Aber wie sehen die genauen Daten dazu aus? Die [Weltbank](https://data.worldbank.org/) veröffentlicht dazu Daten.^[Die hier genutzten wurden von Laura Ziegler bereitgestellt. Vielen Dank dafür!] 
+
+<!-- Technischer Hinweis: das Paket here (https://here.r-lib.org/) ermöglicht einen einfacheren Umgang mit Datei(pfaden) innerhalb von RStudio Projekten. Die csv Datei "InfantIncome.csv" befindet sich im Projektordner "data". -->
+
+```{r einlesen}
+# Datei (inkl. Pfad)
+Saeuglingsdatei <- here("data", "InfantIncome.csv")
+# Daten einlesen
+Saeuglinge <- read.csv2(Saeuglingsdatei)
+# Datenstruktur
+str(Saeuglinge)
+# Obere Beobachtungen der Datentabelle
+head(Saeuglinge)
+```
+
+#### Fragen
+
+- Was ist hier eine Beobachtung?
+
+- Welche Variablen hat die Datentabelle?
+
+***
+
+Genaue Definition der Variablen:
+
+- `saeugling`: "Infant mortality rate is the number of infants dying before reaching one year of age, per 1,000 live births in a given year."
+
+- `einkommen`: "Adjusted net national income is GNI minus consumption of fixed capital and natural resources depletion." 
+
+#### Frage
+
+- Welches Skalenniveau hat die Variable `einkommen`?
+
+***
+
+Streudiagramm (Funktion `gf_point()`) der Variable `saeugling` in Abhängigkeit von `einkommen` aus der Datentabelle `Saeuglinge`.
+
+```{r streudiagramm}
+gf_point(saeugling ~ einkommen, data = Saeuglinge)
+```
+
+#### Frage
+
+- Wie würden Sie den Zusammenhang zwischen Einkommen der Einwohner und der Säuglingssterblichkeit beschreiben?
+
+## Einkommen
+
+Über die Funktion `arrange(variable)` können die Beobachtungen gemäß der `variable` sortiert werden:
+
+```{r arrange1}
+Saeuglinge %>%
+  arrange(einkommen) %>%
+  head()
+```
+
+#### Fragen
+
+- Wird durch die Funkion `arrange()` aufsteigend oder absteigend sortiert?
+
+- Die Funktion `tail()` zeigt die unteren Beobachtungen einer Datentabelle. Wie könnten Sie das Land mit dem höchsten `einkommen` ausgeben?
+
+#### R Übung 
+
+Versuchen Sie das Land mit dem höchsten Wert im `einkommen` auszugeben. Passen Sie den Code entsprechend an.
+
+```{r arrange2}
+Saeuglinge %>%
+  arrange(einkommen) %>%
+  head()
+```
+
+### Datenvorverarbeitung
+
+Über `<-` kann einem R Objekt etwas zugewiesen werden. Über `na.omit()` werden Beobachtungen mit fehlenden Werten (`NA`) aus der Datentabelle gelöscht.
+
+```{r na.omit}
+Saeuglinge_oNA <- Saeuglinge %>%
+  na.omit()
+```
+
+#### Fragen
+
+- Wird die Datentabelle `Saeuglinge_oNA` weniger Variablen haben als die Datentabelle `Saeuglinge`?
+
+- Wird die Datentabelle `Saeuglinge_oNA` weniger Beobachtungen haben als die Datentabelle `Saeuglinge`?
+
+***
+
+```{r arrange3}
+Saeuglinge_oNA %>%
+  arrange(einkommen) %>%
+  tail()
+```
+
+## Deutschland
+
+Die Funktion `filter(kriterium)` wählt Beobachtungen gemäß `kriterium` aus:
+
+```{r filter1}
+Saeuglinge_oNA %>%
+  filter(land == "Germany")
+```
+
+#### R Übung
+
+Ermitteln Sie das `einkommen` in dem Land (außer Deutschland), in dem Sie zuletzt waren. Ändern Sie den Code entsprechend.
+
+```{r filter2}
+Saeuglinge_oNA %>%
+  filter(land == "Germany")
+```
+
+#### Frage
+
+Oben stand:
+
+> Gleichzeitig ist Deutschland ein reiches Land.
+
+Wie können wir dies ermitteln?
+
+***
+
+Die Funktion `mean(~ variable, data = Daten)` bestimmt den arithmetischen Mittelwert der `variable` der Datentabelle `Daten`:
+
+```{r mean1}
+mean(~ einkommen, data = Saeuglinge_oNA)
+```
+
+## Säuglingssterblichkeit
+
+#### Frage
+
+- Wie schneidet Deutschland im Bereich der Säuglingssterblichkeit (`saeugling`) im internationalen Vergleich ab? Begründen Sie.
+
+```{r feld-fuer-R-Code}
+
+```
+
+## Zusammenhang Einkommen und Säuglingssterblichkeit
+
+```{r mean2}
+mw_saeugling <- mean(saeugling ~ 1, data = Saeuglinge_oNA)
+mw_saeugling
+```
+
+
+Über alle Länder in der Datentabelle liegt der arithmetische Mittelwert der Säuglingssterblichkeit bei
+$\bar{y} = `r mw_saeugling`$.
+
+Hilfscode - `select(variablen)` wählt die gewünschten `variablen`:^[Die Funktion `unlist()` sorgt hier dafür, das aus einer Datentabelle eine einfache Zahl wird.]
+
+```{r einkommen_de}
+einkommen_de <- Saeuglinge_oNA %>%
+  filter(land == "Germany") %>%
+  select(einkommen) %>% 
+  unlist()
+
+einkommen_de
+```
+
+Streudiagramm des Zusammenhangs zwischen Einkommen, Säuglingssterblichkeit, ergänzt um durchschnittliche Säuglingssterblichkeit sowie das Einkommen in Deutschland:
+
+```{r streudiagramm_vgl}
+gf_point(saeugling ~ einkommen, data = Saeuglinge_oNA) %>%
+  gf_hline(yintercept = ~ mw_saeugling, color = "purple") %>%
+  gf_vline(xintercept = ~ einkommen_de, color = "orange")
+```
+
+#### Frage
+
+- Ist mit der Kenntnis des Einkommens von Deutschland, $x=`r einkommen_de`$ eine bessere Prognose für $y$ als $`r mw_saeugling`$ möglich? Begründen Sie.
